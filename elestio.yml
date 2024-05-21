@@ -18,7 +18,7 @@ ports:
   - protocol: "HTTPS"
     targetProtocol: "HTTP"
     listeningPort: "2867"
-    targetPort: "27927"
+    targetPort: "21527"
     targetIP: "172.17.0.1"
     public: true
     path: "/"
