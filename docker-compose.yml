@@ -23,7 +23,7 @@ services:
     env_file:
       - .env
     ports:
-      - 172.17.0.1:42501:5432
+      - 172.17.0.1:22501:5432
   redis:
     image: elestio/redis:6.0
     command: --save 60 1 --loglevel warning
