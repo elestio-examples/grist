@@ -6,81 +6,33 @@ services:
     restart: always
     environment:
       GRIST_SESSION_SECRET: ${ADMIN_PASSWORD}
-    ports:
-      - 172.17.0.1:32531:8484
+      APP_HOME_URL: https://${DOMAIN}
+      GRIST_OIDC_SP_HOST: https://${DOMAIN}
+      GRIST_OIDC_IDP_ISSUER: https://${DOMAIN}/uc
+      GRIST_OIDC_IDP_SCOPES: "openid profile email"
+      GRIST_OIDC_IDP_CLIENT_ID: 050984
+      GRIST_OIDC_IDP_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
     volumes:
       - ./storage:/persist
 
-  postgresql:
-    image: elestio/postgres:15
-    restart: always
+  oidc-server:
+    image: vicalloy/oidc-server
     volumes:
-      - ./pgsql:/var/lib/postgresql/data
-    environment:
-      POSTGRES_PASSWORD: ${PG_PASS}
-      POSTGRES_USER: ${PG_USER}
-      POSTGRES_DB: ${PG_DB}
+      - ./config/uc/fixtures:/app/oidc_server/fixtures:z
+      - ./data/uc/db:/app/db:z
+      - ./data/uc/static_root:/app/static_root:z
+    restart: always
     env_file:
-      - .env
-    ports:
-      - 172.17.0.1:22501:5432
-  redis:
-    image: elestio/redis:6.0
-    command: --save 60 1 --loglevel warning
-    restart: always
-    volumes:
-      - ./redis:/data
-  server:
-    image: ghcr.io/goauthentik/server:${SOFTWARE_VERSION_TAG}
-    restart: always
-    command: server
-    environment:
-      AUTHENTIK_REDIS__HOST: redis
-      AUTHENTIK_POSTGRESQL__HOST: postgresql
-      AUTHENTIK_POSTGRESQL__USER: ${PG_USER}
-      AUTHENTIK_POSTGRESQL__NAME: ${PG_DB}
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${PG_PASS}
-    volumes:
-      - ./media:/media
-      - ./custom-templates:/templates
-    env_file:
-      - .env
-    ports:
-      - "172.17.0.1:9850:9000"
-    depends_on:
-      - postgresql
-      - redis
-  worker:
-    image: ghcr.io/goauthentik/server:${SOFTWARE_VERSION_TAG}
-    restart: always
-    command: worker
-    environment:
-      AUTHENTIK_REDIS__HOST: redis
-      AUTHENTIK_POSTGRESQL__HOST: postgresql
-      AUTHENTIK_POSTGRESQL__USER: ${PG_USER}
-      AUTHENTIK_POSTGRESQL__NAME: ${PG_DB}
-      AUTHENTIK_POSTGRESQL__PASSWORD: ${PG_PASS}
-    user: root
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./media:/media
-      - ./certs:/certs
-      - ./backups:/backups
-      - ./custom-templates:/templates
-    env_file:
-      - .env
-    depends_on:
-      - postgresql
-      - redis
+      - ./.env
 
-  pgadmin:
-    image: elestio/pgadmin:latest
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${ADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${ADMIN_PASSWORD}
-      PGADMIN_LISTEN_PORT: 8080
+  nginx:
+    image: nginx
     ports:
-      - "172.17.0.1:21527:8080"
+      - 172.17.0.1:32531:8484
     volumes:
-      - ./servers.json:/pgadmin4/servers.json
+      - ./config/nginx/:/etc/nginx/conf.d/:ro
+      - ./data/uc/static_root:/uc/static_root:ro
+    restart: always
+    depends_on:
+      - grist
+      - oidc-server
