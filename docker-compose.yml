@@ -2,37 +2,15 @@ version: "3.3"
 
 services:
   grist:
-    image: gristlabs/grist:${SOFTWARE_VERSION_TAG}
+    image: gristlabs/grist-omnibus:${SOFTWARE_VERSION_TAG}
     restart: always
     environment:
-      GRIST_SESSION_SECRET: ${ADMIN_PASSWORD}
-      APP_HOME_URL: https://${DOMAIN}
-      GRIST_OIDC_SP_HOST: https://${DOMAIN}
-      GRIST_OIDC_IDP_ISSUER: https://${DOMAIN}/uc
-      GRIST_OIDC_IDP_SCOPES: "openid profile email"
-      GRIST_OIDC_IDP_CLIENT_ID: 050984
-      GRIST_OIDC_IDP_CLIENT_SECRET: ${OIDC_CLIENT_SECRET}
+      URL: https://${DOMAIN}
+      HTTPS: auto
+      TEAM: grist-team
+      EMAIL: ${ADMIN_EMAIL}
+      PASSWORD: ${ADMIN_PASSWORD}
     volumes:
       - ./storage:/persist
-
-  oidc-server:
-    image: vicalloy/oidc-server
-    volumes:
-      - ./config/uc/fixtures:/app/oidc_server/fixtures:z
-      - ./data/uc/db:/app/db:z
-      - ./data/uc/static_root:/app/static_root:z
-    restart: always
-    env_file:
-      - ./.env
-
-  nginx:
-    image: nginx
     ports:
-      - 172.17.0.1:32531:8484
-    volumes:
-      - ./config/nginx/:/etc/nginx/conf.d/:ro
-      - ./data/uc/static_root:/uc/static_root:ro
-    restart: always
-    depends_on:
-      - grist
-      - oidc-server
+      - 172.17.0.1:32531:443

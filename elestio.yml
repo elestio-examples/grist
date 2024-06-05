@@ -1,6 +1,6 @@
 ports:
   - protocol: "HTTPS"
-    targetProtocol: "HTTP"
+    targetProtocol: "HTTPS"
     listeningPort: "443"
     targetPort: "32531"
     targetIP: "172.17.0.1"
@@ -37,13 +37,5 @@ lifeCycleConfig:
 webUI:
   - url: "https://[CI_CD_DOMAIN]"
     label: "Grist"
-    login: "[ADMIN_EMAIL]"
-    password: "[ADMIN_PASSWORD]"
-  - url: "https://[CI_CD_DOMAIN]:6053"
-    label: "Authentik"
-    login: "[ADMIN_EMAIL]"
-    password: "[ADMIN_PASSWORD]"
-  - url: "https://[CI_CD_DOMAIN]:2867"
-    label: "pgAdmin"
     login: "[ADMIN_EMAIL]"
     password: "[ADMIN_PASSWORD]"
